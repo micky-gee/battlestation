@@ -229,8 +229,8 @@ fn last_rate_limits(path: &Path) -> Option<(String, Option<String>)> {
 }
 
 /// One rate-limit record -> the shared usage shape (`sessionPct`,
-/// `sessionResets`, `weeklyPct`, `weeklyResets`) plus `asOf`. None unless
-/// both windows are present.
+/// `sessionResets`, `weeklyPct`, `weeklyResets`) plus `asOf`. A window
+/// the plan doesn't have is omitted; None when neither is present.
 pub fn codex_from_record(line: &str, as_of: Option<&str>, now: i64) -> Option<Value> {
     let v: Value = serde_json::from_str(line).ok()?;
     let rl = v
@@ -270,11 +270,23 @@ pub fn codex_from_record(line: &str, as_of: Option<&str>, now: i64) -> Option<Va
             },
         )
     };
-    let (sp, sr) = read(pick(true)?);
-    let (wp, wr) = read(pick(false)?);
-    let mut out = serde_json::json!({
-        "sessionPct": sp, "sessionResets": sr, "weeklyPct": wp, "weeklyResets": wr,
-    });
+    // Plans differ in which windows they have (Team: 5-hour + weekly;
+    // Pro Lite: weekly only, as `primary`), so each is optional and a
+    // reading needs just one.
+    let session = pick(true).map(read);
+    let weekly = pick(false).map(read);
+    if session.is_none() && weekly.is_none() {
+        return None;
+    }
+    let mut out = serde_json::json!({});
+    if let Some((p, r)) = session {
+        out["sessionPct"] = p.into();
+        out["sessionResets"] = r.into();
+    }
+    if let Some((p, r)) = weekly {
+        out["weeklyPct"] = p.into();
+        out["weeklyResets"] = r.into();
+    }
     if let Some(ts) = as_of {
         out["asOf"] = Value::String(ts.to_string());
     }
@@ -593,16 +605,25 @@ mod tests {
             codex_from_record(&stale, None, now).unwrap()["sessionPct"],
             0
         );
-        // missing a window -> nothing known
-        assert_eq!(
-            codex_from_record(
-                r#"{"payload":{"rate_limits":{"primary":{"window_minutes":300}}}}"#,
-                None,
-                now
-            ),
-            None
-        );
+        // a window the plan lacks is omitted, the other still reads
+        let v = codex_from_record(
+            r#"{"payload":{"rate_limits":{"primary":{"window_minutes":300}}}}"#,
+            None,
+            now,
+        )
+        .unwrap();
+        assert_eq!(v["sessionPct"], 0);
+        assert!(v.get("weeklyPct").is_none());
         assert_eq!(codex_from_record("not json", None, now), None);
+        // A weekly-only plan (Pro Lite: the week as primary, no secondary)
+        // still reads, with the session window simply absent.
+        let weekly_only = r#"{"payload":{"rate_limits":{"primary":{"used_percent":12.0,"window_minutes":10080,"resets_at":4102444800},"secondary":null}}}"#;
+        let v = codex_from_record(weekly_only, None, now).unwrap();
+        assert_eq!(v["weeklyPct"], 12);
+        assert!(v.get("sessionPct").is_none());
+        // No usable window at all: nothing to report.
+        let none = r#"{"payload":{"rate_limits":{"primary":null,"secondary":null}}}"#;
+        assert_eq!(codex_from_record(none, None, now), None);
     }
 
     #[test]

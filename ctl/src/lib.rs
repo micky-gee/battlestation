@@ -764,7 +764,8 @@
 //! — the same data as `/usage`) and codex (the latest `rate_limits` record
 //! in Codex's own session logs under `$CODEX_HOME/sessions`: no network,
 //! as fresh as the last Codex turn, which `asOf` states; windows map by
-//! length, and a window whose reset time has passed reads 0%). Adding one
+//! length, a window the plan lacks is omitted — some plans have only the
+//! weekly one — and a window whose reset time has passed reads 0%). Adding one
 //! is a single entry in usage.rs's provider table. `--kind` filters to one
 //! kind.
 //!

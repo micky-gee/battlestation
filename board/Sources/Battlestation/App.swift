@@ -103,6 +103,8 @@ struct MainView: View {
 
     private func usageHelp(_ kind: String, _ u: Usage) -> String {
         var s = "\(kind.capitalized) plan usage: 5-hour session window and weekly window"
+        if u.sessionPct == nil { s += " (this plan has no session limit: —)" }
+        if u.weeklyPct == nil { s += " (this plan has no weekly limit: —)" }
         if let a = u.asOf, let d = ISO8601DateFormatter.lenient(a) {
             s += " — as of \(fmtAge(Date().timeIntervalSince(d))) ago (updates with each \(kind) turn)"
         }
@@ -112,8 +114,8 @@ struct MainView: View {
     private func meter(_ label: String, _ pct: Double?, _ kind: String, _ asOf: String?) -> some View {
         HStack(spacing: 5) {
             Text(label).font(.caption).foregroundStyle(Theme.muted).lineLimit(1).fixedSize()
-            Meter(value: pct ?? 0)
-            Text("\(Int(pct ?? 0))%").font(Theme.mono).foregroundStyle(Theme.muted)
+            Meter(value: pct ?? 0).opacity(pct == nil ? 0.35 : 1)
+            Text(pct.map { "\(Int($0))%" } ?? "—").font(Theme.mono).foregroundStyle(Theme.muted)
                 .frame(width: 30, alignment: .leading)
         }
     }
