@@ -185,10 +185,8 @@ private struct AskCard: View {
             }
             .padding(.horizontal, 10).padding(.vertical, 5)
             Divider()
-            Text(ask.body ?? "").font(.system(.callout, design: .monospaced))
+            MarkdownView(source: ask.body ?? "")
                 .fixedSize(horizontal: false, vertical: true)
-                .textSelection(.enabled)
-                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(10)
         }
         .background(RoundedRectangle(cornerRadius: 7).fill(Theme.term))

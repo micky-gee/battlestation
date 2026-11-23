@@ -73,7 +73,7 @@ final class Notifier: NSObject, UNUserNotificationCenterDelegate {
         let name = who?.name ?? who?.kind ?? ask.kind ?? "agent"
         c.title = "\(name) · \(world.label(ws: who?.ws ?? ask.ws))"
         c.subtitle = ask.title ?? ""
-        c.body = ask.body ?? ""
+        c.body = MarkdownBlock.plain(ask.body ?? "")
         c.threadIdentifier = ask.session ?? "deck"
         c.userInfo = ["id": ask.id]
         if ask.urgency != "low" { c.sound = .default }
