@@ -208,6 +208,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        NSApp.mainMenu = editMenuBar()
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         statusItem.button?.target = self
         statusItem.button?.action = #selector(togglePopover)
@@ -227,6 +228,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         renderStatusItem()
         store.refreshDeckSwitch()
         store.startStream()
+    }
+
+    /// A menu-bar (LSUIElement) app gets no main menu, and without one
+    /// Cmd+C/V/X/A/Z have nothing to route through — copying from the Deck
+    /// silently did nothing. The menu is never shown (no app menu bar); it
+    /// only carries the standard key equivalents to the first responder.
+    private func editMenuBar() -> NSMenu {
+        let edit = NSMenu(title: "Edit")
+        edit.addItem(withTitle: "Undo", action: Selector(("undo:")), keyEquivalent: "z")
+        let redo = edit.addItem(withTitle: "Redo", action: Selector(("redo:")), keyEquivalent: "z")
+        redo.keyEquivalentModifierMask = [.command, .shift]
+        edit.addItem(.separator())
+        edit.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        edit.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        edit.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        edit.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        let close = NSMenu(title: "Window")
+        close.addItem(withTitle: "Close", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
+        let bar = NSMenu()
+        for m in [NSMenu(title: "Battlestation"), edit, close] {
+            let item = NSMenuItem(title: m.title, action: nil, keyEquivalent: "")
+            item.submenu = m
+            bar.addItem(item)
+        }
+        return bar
     }
 
     private func renderStatusItem() {

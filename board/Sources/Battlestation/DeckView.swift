@@ -131,6 +131,7 @@ private struct AskCard: View {
             Text(askGlyph(ask.type)).font(.system(.body, design: .monospaced).weight(.semibold))
                 .foregroundStyle(Theme.muted).frame(width: 16)
             Text(ask.title ?? "(untitled)").font(.body.weight(.medium)).lineLimit(expanded ? nil : 1)
+                .textSelection(.enabled)
             Spacer()
             if ask.isOpen {
                 Button { onMove(-1) } label: { Image(systemName: "chevron.up") }
