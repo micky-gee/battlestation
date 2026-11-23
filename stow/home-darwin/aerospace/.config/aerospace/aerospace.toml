@@ -87,6 +87,15 @@ cmd-alt-ctrl-left = 'move --boundaries all-monitors-outer-frame left'
 cmd-alt-ctrl-right = 'move --boundaries all-monitors-outer-frame right'
 cmd-alt-ctrl-up = 'move --boundaries all-monitors-outer-frame up'
 cmd-alt-ctrl-down = 'move --boundaries all-monitors-outer-frame down'
+# SHIFT+arrows stacks: the focused window and its neighbour that way share
+# one container laid out across the parent (two columns become one column
+# of two). Hyper+J flips a container's direction; SHIFT+J undoes all
+# stacking on the workspace.
+cmd-alt-ctrl-shift-left = 'join-with left'
+cmd-alt-ctrl-shift-right = 'join-with right'
+cmd-alt-ctrl-shift-up = 'join-with up'
+cmd-alt-ctrl-shift-down = 'join-with down'
+cmd-alt-ctrl-shift-j = 'flatten-workspace-tree'
 
 # 4. Workspace · Hyper (plain = send & follow, SHIFT = send & stay)
 cmd-alt-ctrl-1 = 'exec-and-forget $HOME/.local/bin/bsctl ws send window --bs-id 1 --focus'
