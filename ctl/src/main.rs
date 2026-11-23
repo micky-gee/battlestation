@@ -855,7 +855,7 @@ enum AgentsCmd {
         #[arg(long)]
         stream: bool,
     },
-    /// Plan usage per harness kind (cached; one provider today: claude)
+    /// Plan usage per harness kind (cached; claude and codex)
     Usage {
         /// Only this harness kind
         #[arg(long)]

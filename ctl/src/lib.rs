@@ -64,7 +64,11 @@
 //!   kind (harness binaries are named after their kind: comm `claude` /
 //!   `codex`, both verified live; comm is the kernel's 15-char truncation,
 //!   so longer kinds match on their truncation) — and the scan sweeps
-//!   session files whose pid is dead. `status` is semantic; mapping states
+//!   session files whose pid is dead. A harness serving a GUI rather than
+//!   a terminal (Codex's `app-server` subcommand — the ChatGPT app's and
+//!   editor extensions' embedded Codex; argv via [`sys::proc_argv`]) is
+//!   not tracked: it would pin to the host app's window, send-text can't
+//!   reach it, and its pid lives as long as the app. `status` is semantic; mapping states
 //!   to colours is the widget's concern. `title` (the bot's hover tooltip)
 //!   is kind-agnostic precedence, first non-empty wins: (1) the LAST
 //!   `"type":"ai-title"` record in the transcript, whitespace-collapsed to

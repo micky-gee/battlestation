@@ -202,6 +202,13 @@ fn session_verb(dir: &Path, verb: &str, input: &[u8], kind: &str, over: Option<&
     }
 
     let (pids, harness_pid) = sys::ancestor_chain(kind);
+    // A harness serving a GUI (Codex's `app-server`: the ChatGPT app's and
+    // the editor extensions' embedded Codex) has no terminal: its sessions
+    // would pin to the host app's window, can't be woken by send-text, and
+    // live as long as the app — so they are not tracked, same as no window.
+    if harness_pid.is_some_and(|p| sys::proc_argv(p).is_some_and(|a| is_gui_server(&a))) {
+        return;
+    }
     // Fall back to our immediate parent so the pid field is never omitted.
     let pid = harness_pid.unwrap_or_else(|| std::os::unix::process::parent_id() as i64);
 
@@ -239,6 +246,25 @@ fn session_verb(dir: &Path, verb: &str, input: &[u8], kind: &str, over: Option<&
         kind,
         kitty_route_from_env(),
     );
+}
+
+/// Is this harness argv a GUI-serving server rather than a terminal
+/// session? Codex's `app-server` subcommand, after any global flags.
+fn is_gui_server(argv: &[String]) -> bool {
+    argv.iter()
+        .skip(1)
+        .find(|a| !a.starts_with('-') && !argv_is_flag_value(argv, a))
+        .is_some_and(|a| a == "app-server")
+}
+
+/// Is `a` the value of a preceding value-taking flag (`-c key=val`)?
+fn argv_is_flag_value(argv: &[String], a: &String) -> bool {
+    let i = argv.iter().position(|x| std::ptr::eq(x, a)).unwrap_or(0);
+    i > 0
+        && matches!(
+            argv[i - 1].as_str(),
+            "-c" | "--config" | "-p" | "--profile" | "-C" | "--cd" | "-m" | "--model"
+        )
 }
 
 /// The kitty route for THIS process's terminal window, from the variables
@@ -611,6 +637,24 @@ pub fn agent_cells(rows: &[Value]) -> Vec<Vec<String>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn gui_server_detection() {
+        let v = |xs: &[&str]| xs.iter().map(|x| x.to_string()).collect::<Vec<_>>();
+        assert!(is_gui_server(&v(&[
+            "codex",
+            "-c",
+            "features.x=true",
+            "app-server",
+            "--analytics-default-enabled"
+        ])));
+        assert!(is_gui_server(&v(&["/x/codex", "app-server"])));
+        assert!(!is_gui_server(&v(&["codex"])));
+        assert!(!is_gui_server(&v(&["codex", "--no-daemon"])));
+        assert!(!is_gui_server(&v(&["codex", "exec", "app-server"]))); // a prompt, not the subcommand
+        assert!(!is_gui_server(&v(&["codex", "-c", "app-server"]))); // a flag value
+        assert!(!is_gui_server(&v(&["claude", "--resume"])));
+    }
 
     fn s(v: &[&str]) -> Vec<String> {
         v.iter().map(|x| x.to_string()).collect()

@@ -214,6 +214,54 @@ pub fn proc_info(_pid: i64) -> Option<(i64, String)> {
     None
 }
 
+/// A live pid's argv; None when gone or unreadable. Linux: the NUL-split
+/// /proc/<pid>/cmdline. macOS: `sysctl(KERN_PROCARGS2)`, whose buffer is
+/// `argc` (i32), the exec path, NUL padding, then argc NUL-terminated args.
+#[cfg(target_os = "linux")]
+pub fn proc_argv(pid: i64) -> Option<Vec<String>> {
+    let raw = fs::read(format!("/proc/{pid}/cmdline")).ok()?;
+    Some(
+        raw.split(|&b| b == 0)
+            .filter(|a| !a.is_empty())
+            .map(|a| String::from_utf8_lossy(a).into_owned())
+            .collect(),
+    )
+}
+
+#[cfg(target_os = "macos")]
+pub fn proc_argv(pid: i64) -> Option<Vec<String>> {
+    let mut mib = [libc::CTL_KERN, libc::KERN_PROCARGS2, pid as libc::c_int];
+    let mut size: libc::size_t = 0;
+    let call = |buf: *mut libc::c_void, size: &mut libc::size_t, mib: &mut [libc::c_int; 3]| unsafe {
+        libc::sysctl(mib.as_mut_ptr(), 3, buf, size, std::ptr::null_mut(), 0)
+    };
+    if call(std::ptr::null_mut(), &mut size, &mut mib) != 0 || size < 4 {
+        return None;
+    }
+    let mut buf = vec![0u8; size];
+    if call(buf.as_mut_ptr().cast(), &mut size, &mut mib) != 0 || size < 4 {
+        return None;
+    }
+    buf.truncate(size);
+    let argc = i32::from_ne_bytes(buf[..4].try_into().ok()?).max(0) as usize;
+    let rest = &buf[4..];
+    // Skip the exec path and its NUL padding.
+    let path_end = rest.iter().position(|&b| b == 0)?;
+    let args_start = path_end + rest[path_end..].iter().position(|&b| b != 0)?;
+    Some(
+        rest[args_start..]
+            .split(|&b| b == 0)
+            .take(argc)
+            .map(|a| String::from_utf8_lossy(a).into_owned())
+            .collect(),
+    )
+}
+
+#[cfg(not(any(target_os = "linux", target_os = "macos")))]
+pub fn proc_argv(_pid: i64) -> Option<Vec<String>> {
+    None
+}
+
 /// Is this pid a live process? `kill(pid, 0)`: success, or EPERM (alive
 /// but owned by someone else), means alive. Portable across Linux and
 /// macOS, unlike the old `/proc/<pid>` existence test. Non-positive pids
@@ -319,6 +367,14 @@ fn civil_from_days(z: i64) -> (i64, u32, u32) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn proc_argv_reads_this_process() {
+        let argv = proc_argv(std::process::id() as i64).expect("own argv");
+        let want: Vec<String> = std::env::args().collect();
+        assert_eq!(argv, want);
+        assert_eq!(proc_argv(-1), None);
+    }
 
     #[test]
     fn civil_dates() {
