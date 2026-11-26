@@ -25,6 +25,11 @@ yabai -m config window_placement second_child
 
 yabai -m config layout bsp
 
+# A new terminal takes focus (Hyper+T, Cmd+N): kitty opens it in the
+# background when the request comes from outside kitty.
+yabai -m signal --add label=focus_new_kitty event=window_created app="^kitty$" \
+  action='yabai -m window "$YABAI_WINDOW_ID" --focus'
+
 # yabai has no event stream for bsctl to follow; these wake every
 # `bsctl status --stream` (the team board) when what it shows can change.
 # Labels make re-running this file replace the signals, not stack them.
