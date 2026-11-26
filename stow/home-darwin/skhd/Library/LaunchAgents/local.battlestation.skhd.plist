@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- skhd (stow/home-darwin/skhd): the global keybinds, every one a bsctl or yabai command.
+     Started at login and restarted after a crash. It needs Accessibility
+     permission, granted once by hand (setup/deps-00-yabai.md). PATH is set
+     because launchd's is bare and the commands it runs call Homebrew tools. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>local.battlestation.skhd</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/sh</string>
+    <string>-c</string>
+    <string>exec skhd</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+  </dict>
+  <!-- launchd can't expand $HOME here; /tmp is where skhd's own service logs too. -->
+  <key>StandardOutPath</key>
+  <string>/tmp/battlestation-skhd.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/battlestation-skhd.log</string>
+  <key>ProcessType</key>
+  <string>Interactive</string>
+</dict>
+</plist>

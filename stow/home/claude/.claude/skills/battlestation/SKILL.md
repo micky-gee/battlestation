@@ -27,7 +27,7 @@ It is a single git repository — the source of truth for how the system is set 
 - **Repo:** `~/dev/battlestation` (remote: `git@github.com:drshade/battlestation.git`)
 - **OS:** CachyOS (Arch-based) — or macOS (check `uname`), where only the
   agent-coordination layer applies (AGENTS.md, "Platforms")
-- **Compositor:** Hyprland (Wayland); AeroSpace on macOS
+- **Compositor:** Hyprland (Wayland); on macOS native desktops via yabai (+ skhd keybinds)
 - **Shell/UI:** Noctalia — a Quickshell-based desktop shell (Linux only)
 - **Login shell:** fish
 - **Dotfile management:** GNU Stow, grouped by target root: `stow/<group>/<pkg>/`

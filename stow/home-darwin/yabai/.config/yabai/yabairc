@@ -1,0 +1,37 @@
+#!/usr/bin/env sh
+# yabai — bsctl's window manager on macOS. Workspaces are native Mission
+# Control desktops (bsctl's ws-id is the desktop number, the one Ctrl+<N>
+# switches to; ctl/src/lib.rs, "Window managers"). yabai's jobs here are
+# narrow: tile kitty, answer bsctl's queries, move windows between desktops.
+# Everything else stays macOS's own.
+
+# Only terminals tile. ORDER MATTERS: the rule must exist before the layout
+# becomes bsp — otherwise every window already open is tiled first and,
+# once the rule floats it again, keeps its tiled size and position.
+yabai -m rule --add app!="^kitty$" manage=off
+yabai -m rule --apply
+
+# Edge to edge: agent terminals are read side by side, so the screen goes to
+# text, not gutters. (kitty itself drops its titlebar and rounded corners:
+# stow/home/kitty/.config/kitty/macos.conf.)
+yabai -m config top_padding 0
+yabai -m config bottom_padding 0
+yabai -m config left_padding 0
+yabai -m config right_padding 0
+yabai -m config window_gap 0
+# A new terminal splits the focused tile rather than rebalancing them all.
+yabai -m config auto_balance off
+yabai -m config window_placement second_child
+
+yabai -m config layout bsp
+
+# yabai has no event stream for bsctl to follow; these wake every
+# `bsctl status --stream` (the team board) when what it shows can change.
+# Labels make re-running this file replace the signals, not stack them.
+for event in space_changed display_changed window_created window_destroyed \
+  window_minimized window_deminimized application_terminated \
+  space_created space_destroyed display_added display_removed display_moved \
+  mission_control_exit; do
+  yabai -m signal --add label="bsctl_$event" event="$event" \
+    action="$HOME/.local/bin/bsctl ws changed"
+done

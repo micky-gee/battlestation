@@ -24,7 +24,7 @@ Battlestation.
 
 It holds no state: it follows `bsctl status --format json --stream` and every
 gesture is a bsctl verb, so it can never disagree with the bar on Linux.
-`battlestation://board|deck|links` opens a tab (the AeroSpace keybinds use it).
+`battlestation://board|deck|links` opens a tab (the skhd keybinds use it).
 
 `make build` compiles it (SwiftPM, Xcode command line tools), bundles it with
 the harness glyphs from the bar plugin's `assets/` (their one source of

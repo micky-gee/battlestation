@@ -10,3 +10,5 @@ bash                           # bin/* need bash >= 4; macOS ships 3.2 (bin/lib.
 rustup                         # builds bsctl (make build) — then: rustup default stable
 shellcheck                     # make check lints shell
 gitleaks                       # .githooks/pre-commit secret scan
+asmvik/formulae/yabai          # window manager: tiles kitty, serves bsctl's desktops — built --HEAD (setup/deps-00-yabai.md)
+asmvik/formulae/skhd           # global keybinds (setup/deps-00-yabai.md)

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- yabai (stow/home-darwin/yabai): tiles kitty and serves bsctl's desktop queries.
+     Started at login and restarted after a crash. It needs Accessibility
+     permission, granted once by hand (setup/deps-00-yabai.md). PATH is set
+     because launchd's is bare and the commands it runs call Homebrew tools. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>local.battlestation.yabai</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/sh</string>
+    <string>-c</string>
+    <string>exec yabai</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+  </dict>
+  <!-- launchd can't expand $HOME here; /tmp is where yabai's own service logs too. -->
+  <key>StandardOutPath</key>
+  <string>/tmp/battlestation-yabai.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/battlestation-yabai.log</string>
+  <key>ProcessType</key>
+  <string>Interactive</string>
+</dict>
+</plist>

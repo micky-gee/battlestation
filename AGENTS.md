@@ -38,8 +38,8 @@ Personal dotfiles, published as a reference for others, for a **CachyOS**
 machine running **Hyprland** (Wayland compositor) + **Noctalia** (a
 Quickshell-based desktop shell). Configs are version-controlled here and
 symlinked into place with **GNU Stow**. The agent-coordination layer
-(`bsctl`, the harness configs, kitty) also runs on **macOS** under the
-**AeroSpace** tiling window manager — see "Platforms" below.
+(`bsctl`, the harness configs, kitty) also runs on **macOS**, on native
+desktops driven through **yabai** — see "Platforms" below.
 
 ## The Stow model
 
@@ -202,28 +202,33 @@ The repo serves two kinds of machine; neither is the "port" of the other.
 
 - **Linux (CachyOS + Hyprland + Noctalia)** is the full desktop: everything
   under `stow/home/`, `stow/home-linux/` and `stow/root-linux/`.
-- **macOS (AeroSpace + kitty)** runs the agent-coordination layer: the shared
-  `stow/home/` packages plus `stow/home-darwin/`. There is no Noctalia; the
-  window manager is AeroSpace and Caps-as-Hyper comes from Karabiner. The
+- **macOS (yabai + skhd + kitty)** runs the agent-coordination layer: the
+  shared `stow/home/` packages plus `stow/home-darwin/`. There is no
+  Noctalia; workspaces are native Mission Control desktops, yabai tiles
+  kitty, skhd binds the keys and Caps-as-Hyper comes from Karabiner. Native
+  desktops rather than AeroSpace's emulated ones: emulation parks windows
+  off-screen, which with "Displays have separate Spaces" on loses windows
+  that change display (`setup/deps-00-yabai.md`). The
   bar's role is played by `board/`, a Swift menu-bar app (Team Board, Deck,
   Links) built by `make build` — like the Noctalia plugin it holds no state:
   it follows `bsctl status --stream` and every gesture is a bsctl verb, so
   bsctl stays the only owner of the protocols. It is the second built
   artifact; doctor checks its freshness the same way as bsctl's.
 - **Tools are resolved, not assumed on PATH.** GUI and launchd environments
-  run with a bare PATH, so bsctl finds `aerospace`/`kitty` via `sys::tool`
+  run with a bare PATH, so bsctl finds `yabai`/`kitty` via `sys::tool`
   (PATH first, then the standard install dirs).
 - **bsctl is one codebase for both.** Platform differences stay inside a few
   seams, each with a reason in its module header: `sys.rs` (runtime dir,
   process ancestry, liveness), `watch.rs` (inotify / kqueue), `ipc.rs` +
-  `aerospace.rs` (the window-manager backend; contract in `ctl/src/lib.rs`,
+  `yabai.rs` / `aerospace.rs` (the window-manager backends; contract in `ctl/src/lib.rs`,
   "Window managers"), `usage.rs` (credentials file / Keychain). Everything
   above the seams consumes one Hyprland-shaped JSON model and mutates through
   `ws::Action`, so the battlespace model, the asks queue, the Switchboard and
   the stream behave identically. The `display` domain (dpms, scale, lid) is
   Hyprland-only and refuses elsewhere.
 - **Tests run on both.** The Hyprland suites pin `BSCTL_WM=hyprland` against
-  their fake `hyprctl`; `ctl/tests/aerospace.rs` drives a fake `aerospace`.
+  their fake `hyprctl`; `ctl/tests/yabai.rs` and
+  `ctl/tests/aerospace.rs` drive fake `yabai` / `aerospace` CLIs.
   A change to a seam is not done until `cargo test` passes on each OS it
   touches.
 - **Tooling.** `bin/*` need bash ≥ 4; `bin/lib.sh` re-execs into Homebrew's

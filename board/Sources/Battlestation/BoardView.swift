@@ -28,7 +28,7 @@ struct BoardView: View {
             if world.workspaces == nil {
                 ContentUnavailableView(
                     "No window manager", systemImage: "rectangle.3.group",
-                    description: Text("bsctl can't see AeroSpace (or Hyprland). Agents still report; lanes appear when it's running."))
+                    description: Text("bsctl can't see yabai (or Hyprland). Agents still report; lanes appear when it's running."))
             } else if isSnapshot {
                 lanesRow
             } else {

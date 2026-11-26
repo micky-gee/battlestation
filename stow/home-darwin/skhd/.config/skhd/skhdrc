@@ -1,0 +1,84 @@
+# skhd — global keybinds on macOS, the counterpart of the Hyprland setup's
+# keybinds.lua. One verb per modifier, adapted to macOS, where Cmd belongs to
+# apps (copy, paste, tabs):
+#   CTRL+OPTION = GO — change where you're looking; never moves a window.
+#         (Not Option alone: Option+arrows is word movement and Option+digit
+#         types characters in every macOS text field.)
+#   HYPER (Caps Lock = Cmd+Alt+Ctrl, via the Karabiner rule in
+#         stow/home-darwin/karabiner) = DO — act on the focused window.
+#   SHIFT = the "…and stay" suffix, exactly as on Linux.
+# Number row = battlespaces, F-row = displays. Workspace verbs go through
+# bsctl, which addresses desktops by battlespace id (the order and names the
+# team board shows): CTRL+OPTION+N is "the Nth battlespace". macOS's own
+# Ctrl+N stays "Desktop N" in Mission Control order (setup/deps-00-yabai.md).
+# Moving a whole desktop to another display is Mission Control's job (drag
+# it): yabai can't with SIP enabled, so the F-row has no send.
+
+# 1. Navigate · Ctrl+Option
+ctrl + alt - 1 : $HOME/.local/bin/bsctl ws focus --bs-id 1
+ctrl + alt - 2 : $HOME/.local/bin/bsctl ws focus --bs-id 2
+ctrl + alt - 3 : $HOME/.local/bin/bsctl ws focus --bs-id 3
+ctrl + alt - 4 : $HOME/.local/bin/bsctl ws focus --bs-id 4
+ctrl + alt - 5 : $HOME/.local/bin/bsctl ws focus --bs-id 5
+ctrl + alt - 6 : $HOME/.local/bin/bsctl ws focus --bs-id 6
+ctrl + alt - 7 : $HOME/.local/bin/bsctl ws focus --bs-id 7
+ctrl + alt - 8 : $HOME/.local/bin/bsctl ws focus --bs-id 8
+ctrl + alt - 9 : $HOME/.local/bin/bsctl ws focus --bs-id 9
+ctrl + alt - 0 : $HOME/.local/bin/bsctl ws focus --bs-id 10
+ctrl + alt - b : open battlestation://board
+ctrl + alt - a : open battlestation://deck
+ctrl + alt - left : yabai -m window --focus west || yabai -m display --focus west
+ctrl + alt - right : yabai -m window --focus east || yabai -m display --focus east
+ctrl + alt - up : yabai -m window --focus north || yabai -m display --focus north
+ctrl + alt - down : yabai -m window --focus south || yabai -m display --focus south
+ctrl + alt - f1 : $HOME/.local/bin/bsctl ws focus --display-id 1
+ctrl + alt - f2 : $HOME/.local/bin/bsctl ws focus --display-id 2
+ctrl + alt - f3 : $HOME/.local/bin/bsctl ws focus --display-id 3
+
+# 2. Launch · Hyper
+# One kitty process for every terminal (one app in Cmd+Tab): --single-instance
+# hands the new window to the running kitty. bsctl routes per kitty window
+# id, so many windows in one process is fine (ctl/src/lib.rs, agents send).
+cmd + alt + ctrl - t : /Applications/kitty.app/Contents/MacOS/kitty --single-instance --directory ~
+
+# 3. Window · Hyper
+# Arrows swap tiles; past the screen edge the window carries onto the
+# neighbouring display. SHIFT+arrows stacks: re-split the focused window
+# against its neighbour that way (two columns become one column of two).
+# J flips a split's direction; SHIFT+J evens out every tile.
+cmd + alt + ctrl - q : yabai -m window --close
+cmd + alt + ctrl - f : yabai -m window --toggle zoom-fullscreen
+cmd + alt + ctrl - o : yabai -m window --toggle float
+cmd + alt + ctrl - j : yabai -m window --toggle split
+cmd + alt + ctrl + shift - j : yabai -m space --balance
+cmd + alt + ctrl - left : yabai -m window --swap west || (yabai -m window --display west && yabai -m display --focus west)
+cmd + alt + ctrl - right : yabai -m window --swap east || (yabai -m window --display east && yabai -m display --focus east)
+cmd + alt + ctrl - up : yabai -m window --swap north || (yabai -m window --display north && yabai -m display --focus north)
+cmd + alt + ctrl - down : yabai -m window --swap south || (yabai -m window --display south && yabai -m display --focus south)
+cmd + alt + ctrl + shift - left : yabai -m window --warp west
+cmd + alt + ctrl + shift - right : yabai -m window --warp east
+cmd + alt + ctrl + shift - up : yabai -m window --warp north
+cmd + alt + ctrl + shift - down : yabai -m window --warp south
+
+# 4. Battlespace · Hyper (plain = send & follow, SHIFT = send & stay)
+cmd + alt + ctrl - 1 : $HOME/.local/bin/bsctl ws send window --bs-id 1 --focus
+cmd + alt + ctrl - 2 : $HOME/.local/bin/bsctl ws send window --bs-id 2 --focus
+cmd + alt + ctrl - 3 : $HOME/.local/bin/bsctl ws send window --bs-id 3 --focus
+cmd + alt + ctrl - 4 : $HOME/.local/bin/bsctl ws send window --bs-id 4 --focus
+cmd + alt + ctrl - 5 : $HOME/.local/bin/bsctl ws send window --bs-id 5 --focus
+cmd + alt + ctrl - 6 : $HOME/.local/bin/bsctl ws send window --bs-id 6 --focus
+cmd + alt + ctrl - 7 : $HOME/.local/bin/bsctl ws send window --bs-id 7 --focus
+cmd + alt + ctrl - 8 : $HOME/.local/bin/bsctl ws send window --bs-id 8 --focus
+cmd + alt + ctrl - 9 : $HOME/.local/bin/bsctl ws send window --bs-id 9 --focus
+cmd + alt + ctrl - 0 : $HOME/.local/bin/bsctl ws send window --bs-id 10 --focus
+cmd + alt + ctrl + shift - 1 : $HOME/.local/bin/bsctl ws send window --bs-id 1
+cmd + alt + ctrl + shift - 2 : $HOME/.local/bin/bsctl ws send window --bs-id 2
+cmd + alt + ctrl + shift - 3 : $HOME/.local/bin/bsctl ws send window --bs-id 3
+cmd + alt + ctrl + shift - 4 : $HOME/.local/bin/bsctl ws send window --bs-id 4
+cmd + alt + ctrl + shift - 5 : $HOME/.local/bin/bsctl ws send window --bs-id 5
+cmd + alt + ctrl + shift - 6 : $HOME/.local/bin/bsctl ws send window --bs-id 6
+cmd + alt + ctrl + shift - 7 : $HOME/.local/bin/bsctl ws send window --bs-id 7
+cmd + alt + ctrl + shift - 8 : $HOME/.local/bin/bsctl ws send window --bs-id 8
+cmd + alt + ctrl + shift - 9 : $HOME/.local/bin/bsctl ws send window --bs-id 9
+cmd + alt + ctrl + shift - 0 : $HOME/.local/bin/bsctl ws send window --bs-id 10
+cmd + alt + ctrl + shift - 0x33 : $HOME/.local/bin/bsctl ws map reset

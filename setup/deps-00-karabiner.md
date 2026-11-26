@@ -1,7 +1,7 @@
 # Karabiner-Elements (Caps Lock → Hyper on macOS)
 
 The macOS counterpart of xkb `caps:hyper`: the keybind model's DO modifier
-(`stow/home-darwin/aerospace`) is Caps Lock sent as Cmd+Alt+Ctrl. Shift stays
+(`stow/home-darwin/skhd`) is Caps Lock sent as Cmd+Alt+Ctrl. Shift stays
 out of Hyper so it remains the "…and stay" suffix.
 
 Karabiner rewrites its own `karabiner.json` at runtime, so the repo ships the

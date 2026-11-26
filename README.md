@@ -3,9 +3,9 @@
 My **battlestation** — the CachyOS + Hyprland + Noctalia (Quickshell) desktop
 configuration and personal customisations for this machine, managed as dotfiles
 with [GNU Stow](https://www.gnu.org/software/stow/). The agent-coordination
-layer (`bsctl`, the agent harness configs, kitty) also runs on macOS under
-[AeroSpace](https://github.com/nikitabobko/AeroSpace) — see AGENTS.md,
-"Platforms".
+layer (`bsctl`, the agent harness configs, kitty) also runs on macOS, on
+native desktops driven through [yabai](https://github.com/asmvik/yabai) —
+see AGENTS.md, "Platforms".
 
 ## Layout
 
@@ -97,7 +97,7 @@ make build       # build + install bsctl and the menu-bar app (board/)
 make check
 ```
 
-Then the out-of-band steps in `setup/deps-00-aerospace.md` and
+Then the out-of-band steps in `setup/deps-00-yabai.md` and
 `setup/deps-00-karabiner.md` (permissions macOS only grants by hand).
 
 ## Tasks
