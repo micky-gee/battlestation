@@ -279,7 +279,7 @@ pub fn pid_alive(pid: i64) -> bool {
 /// Resolve an external tool for `Command::new`: the first executable `name`
 /// on PATH, else in the standard install dirs a GUI or launchd environment
 /// leaves off PATH (a launchd agent gets /usr/bin:/bin:/usr/sbin:/sbin, so
-/// the menu-bar app's bsctl could not find Homebrew's `aerospace` or
+/// the menu-bar app's bsctl could not find Homebrew's `yabai` or
 /// `kitty`), else the bare name (spawn then fails as before). PATH stays
 /// first so callers — and the tests' fake tools — keep control.
 pub fn tool(name: &str) -> PathBuf {

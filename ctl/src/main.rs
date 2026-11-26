@@ -297,6 +297,9 @@ enum WsCmd {
         #[command(subcommand)]
         cmd: PrefsCmd,
     },
+    /// Tell bsctl the window manager's state changed (yabai's signals call
+    /// this; it wakes every `status --stream`)
+    Changed,
 }
 
 #[derive(Subcommand)]
@@ -889,6 +892,10 @@ fn main() {
     let cli = Cli::parse();
     let code = match cli.cmd {
         Cmd::Ws { cmd } => match cmd {
+            WsCmd::Changed => {
+                bsctl::ws::note_changed();
+                0
+            }
             WsCmd::Focus { sel } => sel.dispatch(),
             WsCmd::Send { cmd } => match cmd {
                 SendCmd::Window { sel, focus } => bsctl::ws::send_window(&sel.target(), focus),

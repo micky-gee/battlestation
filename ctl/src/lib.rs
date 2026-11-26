@@ -787,29 +787,55 @@
 //! missing/unreadable -> nothing known). It is passed to curl on stdin,
 //! never in argv.
 //!
-//! # Window managers (`ipc.rs`, `aerospace.rs`)
+//! # Window managers (`ipc.rs`, `yabai.rs`, `aerospace.rs`)
 //!
 //! bsctl drives one window manager per process, picked by [`ipc::wm`]:
-//! `BSCTL_WM=hyprland|aerospace` when set, else by OS (AeroSpace on macOS,
-//! Hyprland elsewhere). Everything downstream of `ipc` consumes
+//! `BSCTL_WM=hyprland|yabai|aerospace` when set, else by OS (yabai on
+//! macOS, Hyprland elsewhere). Everything downstream of `ipc` consumes
 //! Hyprland-shaped JSON and mutates through [`ws::Action`] + [`ipc::act`],
 //! so the battlespace model, the world and every `ws` verb are
-//! backend-neutral.
+//! backend-neutral. Raw Lua (`ipc::dispatch`/`eval`/`reload`) and the whole
+//! `display` domain are Hyprland-only and refuse elsewhere.
 //!
-//! AeroSpace mapping ([`aerospace`]): a ws-id is an AeroSpace workspace
-//! whose NAME is a positive integer (declare them persistent); other
-//! workspaces are invisible to bsctl. AeroSpace has no rename, so workspace
-//! display names live in bsctl's `names` file (`<id> <name>` lines, a
-//! sibling of `map`/`prefs`, written by `ws name set|rm`). Displays are
-//! numbered by AeroSpace's left-to-right `monitor-id`; the world's
-//! `displays[].x` is that ordinal, not pixels. A session's window is the
-//! first window whose app pid is an ancestor of the hook — narrowed, when
-//! several match (kitty serves every window from one process on macOS), to
-//! the OS window kitty reports for the hook's `KITTY_WINDOW_ID`. Stream
-//! events come from a supervised `aerospace subscribe` child; when it
-//! exits (AeroSpace not running) the stream runs on files alone and
-//! retries every slow tick. Raw Lua (`ipc::dispatch`/`eval`/`reload`) and
-//! the whole `display` domain are Hyprland-only and refuse elsewhere.
+//! Shared by the macOS backends: workspace display names live in bsctl's
+//! `names` file (`<id> <name>` lines, a sibling of `map`/`prefs`, written
+//! by `ws name set|rm`), since neither window manager has a rename. A
+//! session's window is the first window whose app pid is an ancestor of
+//! the hook — narrowed, when several match (kitty serves every window from
+//! one process on macOS), to the OS window kitty reports for the hook's
+//! `KITTY_WINDOW_ID` (`aerospace::pick_client`).
+//!
+//! yabai mapping ([`yabai`], the macOS default): workspaces are native
+//! Mission Control desktops, so macOS owns window placement and every other
+//! app behaves as it always does; yabai tiles what its rules manage
+//! (kitty), answers queries and moves windows. A ws-id is the desktop's
+//! Mission Control number — user desktops (native fullscreen spaces
+//! excluded) in yabai's global space order, 1-based, the number macOS's
+//! "Switch to Desktop N" shortcut uses. It shifts when desktops are added,
+//! removed or reordered, and names and the battlespace map follow the
+//! number. Displays are named "Built-in Display" / "External Display" (from
+//! CoreGraphics; yabai reports no names) with real frame geometry. With SIP
+//! enabled (verified macOS 27.2, yabai HEAD 477e859): `ws focus` posts the
+//! system's Ctrl+<N> desktop shortcut (it must be enabled, and the app
+//! running bsctl needs Accessibility permission; without it a desktop
+//! holding a window is reached by focusing that window, and
+//! `BSCTL_NO_KEYSTROKES=1` forces that path — the tests set it), because
+//! yabai's own switching is ignored by macOS 27; desktops past 9 have no
+//! shortcut and are reached through a window. `ws send workspace` refuses:
+//! moving a desktop between displays needs yabai's scripting addition (SIP
+//! off), and Mission Control does it natively by drag. yabai has no event
+//! stream: its signals run `ws changed`, which atomically rewrites the
+//! `wm-changed` file beside `map` (content never read) so the stream's dir
+//! watcher wakes; every yabai mutation does the same.
+//!
+//! AeroSpace mapping ([`aerospace`], `BSCTL_WM=aerospace`): emulated
+//! workspaces, kept for setups that prefer them. A ws-id is an AeroSpace
+//! workspace whose NAME is a positive integer (declare them persistent);
+//! other workspaces are invisible to bsctl. Displays are numbered by
+//! AeroSpace's left-to-right `monitor-id`; the world's `displays[].x` is
+//! that ordinal, not pixels. Stream events come from a supervised
+//! `aerospace subscribe` child; when it exits (AeroSpace not running) the
+//! stream runs on files alone and retries every slow tick.
 //!
 //! # Hyprland IPC (`ipc.rs`)
 //!
@@ -865,3 +891,4 @@ pub mod usage;
 pub mod watch;
 pub mod world;
 pub mod ws;
+pub mod yabai;

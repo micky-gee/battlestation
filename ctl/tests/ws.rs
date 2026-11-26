@@ -776,7 +776,7 @@ fn stub_keychain(fakebin: &std::path::Path, serve: Option<&std::path::Path>) {
 
 /// The binary under test, pinned to the Hyprland backend: these tests
 /// drive a fake hyprctl/socket, and the default backend is per-OS
-/// (AeroSpace on macOS), so the pin keeps them meaningful everywhere.
+/// (yabai on macOS), so the pin keeps them meaningful everywhere.
 fn wm_cmd() -> Command {
     let mut c = Command::new(env!("CARGO_BIN_EXE_bsctl"));
     c.env("BSCTL_WM", "hyprland");

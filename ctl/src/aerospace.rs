@@ -338,8 +338,14 @@ pub fn act(a: &Action) -> i32 {
 /// `KITTY_LISTEN_ON` + `KITTY_WINDOW_ID` that kitty exports into every
 /// child (the hook inherits them from the harness).
 pub fn client_for_pids(pids: &[i64]) -> Option<(i64, Option<String>, Option<i64>)> {
-    let s = snap()?;
-    let clients = clients_from(&s);
+    pick_client(&clients_from(&snap()?), pids)
+}
+
+/// The pid -> window rule shared by the macOS backends, over a
+/// Hyprland-shaped clients array: the first window of an ancestor pid, or —
+/// when several match (one kitty process, many windows) — the one kitty
+/// itself names as this process's OS window.
+pub fn pick_client(clients: &Value, pids: &[i64]) -> Option<(i64, Option<String>, Option<i64>)> {
     let set: HashSet<i64> = pids.iter().copied().collect();
     let matches: Vec<&Value> = clients
         .as_array()?

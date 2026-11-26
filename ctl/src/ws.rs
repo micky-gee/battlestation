@@ -306,8 +306,8 @@ pub fn rename_cmd(id: i64, name: Option<&str>) -> String {
 /// A compositor mutation, backend-neutral. Every `ws` verb mutates through
 /// one of these and [`ipc::act`]: the Hyprland backend renders it with the
 /// byte-pinned Lua builders above ([`Action::lua`] — unchanged dispatch
-/// strings), the AeroSpace backend translates it to `aerospace` commands
-/// (crate::aerospace).
+/// strings), the macOS backends translate it to `yabai` / `aerospace` commands
+/// (crate::yabai, crate::aerospace).
 pub enum Action {
     Focus(WsToken),
     FocusMonitor(String),
@@ -361,7 +361,7 @@ pub fn prefs_file() -> PathBuf {
 }
 
 /// `…/battlestation-workspaces/names` — workspace display names for
-/// window managers that have no rename of their own (AeroSpace: a
+/// window managers that have no rename of their own (yabai and AeroSpace: a
 /// workspace's name IS its id). One `<id> <name>` line per named
 /// workspace, sorted by id; the name is the rest of the line (spaces
 /// allowed). A sibling of map/prefs, so the stream engine's dir watcher
@@ -369,6 +369,24 @@ pub fn prefs_file() -> PathBuf {
 /// Hyprland never reads it — Hyprland owns its own names.
 pub fn names_file() -> PathBuf {
     map_file().with_file_name("names")
+}
+
+/// `…/battlestation-workspaces/wm-changed` — a wake-up file, not state:
+/// window managers without an event stream (yabai: its signals run `bsctl
+/// ws changed`) rewrite it so the `--stream` engine, which watches this
+/// dir, re-evaluates. Its content (a timestamp) is never read.
+pub fn changed_file() -> PathBuf {
+    map_file().with_file_name("wm-changed")
+}
+
+/// Wake every streamer: atomically replace [`changed_file`] (a rename is
+/// what both inotify and kqueue see on the directory). Best-effort.
+pub fn note_changed() {
+    let path = changed_file();
+    let Some(dir) = path.parent() else { return };
+    let _ = std::fs::create_dir_all(dir);
+    let _ =
+        crate::sys::atomic_write_json(dir, "wm-changed", &serde_json::json!(crate::sys::now_f64()));
 }
 
 /// Names-file parse: `<id> <name...>`; malformed lines and empty names are

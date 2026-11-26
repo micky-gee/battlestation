@@ -482,6 +482,9 @@ impl EventSock {
                 stream.set_nonblocking(true).ok()?;
                 Src::Hypr(stream)
             }
+            // yabai has no event stream: its signals run `bsctl ws changed`,
+            // which touches a watched file ([`crate::ws::note_changed`]).
+            ipc::Wm::Yabai => return None,
             ipc::Wm::AeroSpace => {
                 let mut child = std::process::Command::new(sys::tool("aerospace"))
                     .args(["subscribe", "--all", "--no-send-initial"])

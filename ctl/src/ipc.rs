@@ -1,11 +1,13 @@
 //! The window-manager boundary. Every compositor-facing call in this crate
 //! goes through here, and [`wm`] picks the backend: Hyprland (a direct
 //! `.socket.sock` client with a hyprctl fallback — everything below this
-//! paragraph) or AeroSpace on macOS ([`crate::aerospace`], which answers the
-//! same queries in Hyprland's JSON shape and translates [`Action`]s).
-//! Selection: `BSCTL_WM=hyprland|aerospace` when set, else by OS —
-//! AeroSpace on macOS, Hyprland everywhere else. Raw Lua (`dispatch`,
-//! `eval`, `reload`) is Hyprland-only; under AeroSpace those refuse loudly.
+//! paragraph), or on macOS yabai ([`crate::yabai`]: workspaces are native
+//! desktops) or AeroSpace ([`crate::aerospace`]: emulated workspaces). The
+//! macOS backends answer the same queries in Hyprland's JSON shape and
+//! translate [`Action`]s. Selection: `BSCTL_WM=hyprland|yabai|aerospace`
+//! when set, else by OS — yabai on macOS, Hyprland everywhere else. Raw Lua
+//! (`dispatch`, `eval`, `reload`) is Hyprland-only; elsewhere those refuse
+//! loudly.
 //!
 //! Hyprland: every compositor call goes through here;
 //! the contract is summarized in lib.rs ("Hyprland IPC") and the wire notes
@@ -63,15 +65,16 @@ use std::process::{Command, Stdio};
 
 use serde_json::Value;
 
-use crate::aerospace;
 use crate::sys;
 use crate::ws::Action;
+use crate::{aerospace, yabai};
 
 /// The window manager bsctl drives.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Wm {
     Hyprland,
     AeroSpace,
+    Yabai,
 }
 
 /// [`Wm`] for this process: `BSCTL_WM` wins (tests pin it; a Linux box
@@ -80,7 +83,8 @@ pub fn wm() -> Wm {
     match env::var("BSCTL_WM").ok().as_deref() {
         Some("hyprland") => Wm::Hyprland,
         Some("aerospace") => Wm::AeroSpace,
-        _ if cfg!(target_os = "macos") => Wm::AeroSpace,
+        Some("yabai") => Wm::Yabai,
+        _ if cfg!(target_os = "macos") => Wm::Yabai,
         _ => Wm::Hyprland,
     }
 }
@@ -91,6 +95,7 @@ pub fn act(a: &Action) -> i32 {
     match wm() {
         Wm::Hyprland => dispatch(&a.lua()),
         Wm::AeroSpace => aerospace::act(a),
+        Wm::Yabai => yabai::act(a),
     }
 }
 
@@ -181,8 +186,10 @@ fn socket_request(cmd: &str) -> io::Result<Vec<u8>> {
 /// None on total failure (both paths); like the old sys::hyprctl_json, hook
 /// callers stay silent on None while CLI callers report and exit non-zero.
 pub fn json(query: &str) -> Option<Value> {
-    if wm() == Wm::AeroSpace {
-        return aerospace::json(query);
+    match wm() {
+        Wm::AeroSpace => return aerospace::json(query),
+        Wm::Yabai => return yabai::json(query),
+        Wm::Hyprland => {}
     }
     if let Ok(buf) = socket_request(&format!("j/{query}"))
         && let Ok(v) = serde_json::from_slice(&buf)
@@ -263,8 +270,10 @@ fn ok_command(words: &[&str]) -> i32 {
 /// which is the harness. Integration tests fake this with a stub hyprctl
 /// on PATH (their XDG_RUNTIME_DIR holds no socket, so the fallback runs).
 pub fn client_for_pids(pids: &[i64]) -> Option<(i64, Option<String>, Option<i64>)> {
-    if wm() == Wm::AeroSpace {
-        return aerospace::client_for_pids(pids);
+    match wm() {
+        Wm::AeroSpace => return aerospace::client_for_pids(pids),
+        Wm::Yabai => return yabai::client_for_pids(pids),
+        Wm::Hyprland => {}
     }
     client_of(&json("clients")?, pids)
 }
