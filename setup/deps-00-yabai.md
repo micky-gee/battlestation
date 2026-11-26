@@ -25,7 +25,7 @@ brew install asmvik/formulae/skhd
 
 System Settings → Privacy & Security → Accessibility → **+** →
 `/opt/homebrew/bin/yabai`, and again for `/opt/homebrew/bin/skhd`. launchd
-retries both agents every few seconds, so they start once allowed (logs:
+restarts both agents every 10 seconds, so they start once allowed (logs:
 `/tmp/battlestation-{yabai,skhd}.log`). A HEAD rebuild is a new binary to
 macOS: re-allow yabai after `brew reinstall`/`upgrade`.
 

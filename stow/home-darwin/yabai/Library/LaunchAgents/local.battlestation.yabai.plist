@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!-- yabai (stow/home-darwin/yabai): tiles kitty and serves bsctl's desktop queries.
-     Started at login and restarted after a crash. It needs Accessibility
+     Started at login and kept running. It needs Accessibility
      permission, granted once by hand (setup/deps-00-yabai.md). PATH is set
      because launchd's is bare and the commands it runs call Homebrew tools. -->
 <plist version="1.0">
@@ -21,11 +21,11 @@
   </dict>
   <key>RunAtLoad</key>
   <true/>
+  <!-- Always restart (launchd throttles to one start per 10s): without
+       Accessibility it exits 0 at once, so restarting only after failures
+       would leave it stopped after the permission is granted. -->
   <key>KeepAlive</key>
-  <dict>
-    <key>SuccessfulExit</key>
-    <false/>
-  </dict>
+  <true/>
   <!-- launchd can't expand $HOME here; /tmp is where yabai's own service logs too. -->
   <key>StandardOutPath</key>
   <string>/tmp/battlestation-yabai.log</string>
